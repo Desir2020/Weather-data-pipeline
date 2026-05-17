@@ -17,5 +17,7 @@ CREATE TABLE weather (
 
     humidity INT,
     pressure INT,
-    wind_speed DOUBLE PRECISION
+    wind_speed DOUBLE PRECISION,
+
+    inserted_at TIMESTAMP DEFAULT NOW()
 );

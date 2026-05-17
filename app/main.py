@@ -1,6 +1,12 @@
-from dotenv import load_dotenv
-import os
+from app.extract.extract import weather_ville
+from app.transform.transform import transform_weather_data
 
-load_dotenv()
 
-api_key = os.getenv("API_KEY")
+ville = input("Ville : ")
+
+data = weather_ville(ville)
+
+weather_data = transform_weather_data(data)
+
+for cle,valeur in weather_data.items():
+    print(f"{cle}:{valeur}")

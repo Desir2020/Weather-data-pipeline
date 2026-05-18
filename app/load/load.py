@@ -46,6 +46,9 @@ def load_weather(weather_data):
             %s, %s, %s, %s,
             %s, %s, %s
         )    
+        
+        ON CONFLICT (city,recorded_at)
+        DO NOTHING
     """
     values = (
         weather_data["city"],

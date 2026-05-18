@@ -19,5 +19,7 @@ CREATE TABLE weather (
     pressure INT,
     wind_speed DOUBLE PRECISION,
 
-    inserted_at TIMESTAMP DEFAULT NOW()
+    inserted_at TIMESTAMP DEFAULT NOW(),
+
+    CONSTRAINT unique_weather UNIQUE(city, recorded_at)
 );

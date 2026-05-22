@@ -1,0 +1,55 @@
+services:
+  # Container PostgreSQL
+  db:
+    # Image officielle PostgreSQL téléchargée depuis Docker Hub, pas besoin de Dockerfile
+    image: postgres:15
+
+    # Variables de configuration pour créer la base au démarrage
+    # ${DB_NAME} etc. sont lus depuis mon fichier .env
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+    # Format hôte:container — permet d'accéder à PostgreSQL depuis mon ordi
+    ports:
+      - "5432:5432"
+
+    # Monte mon fichier SQL dans un dossier spécial de PostgreSQL
+    # Tous les fichiers .sql dans ce dossier sont exécutés automatiquement au premier démarrage
+    # C'est comme ça que ma table weather est créée
+    volumes:
+      - ./sql/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
+
+    # Vérifie que PostgreSQL est vraiment prêt à accepter des connexions
+    # pg_isready teste la connexion toutes les 5 secondes, 5 tentatives max
+    # Le pipeline ne démarre que quand ce check passe
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      retries: 5
+
+  # Container Python — mon pipeline ETL
+  pipeline:
+    # Compose lit mon Dockerfile pour construire l'image, puis lance un container depuis cette image
+    # Le . veut dire "cherche le Dockerfile dans le dossier courant"
+    build: .
+
+    # Le pipeline dépend de db — mais depends_on seul attend juste que le container démarre
+    # condition: service_healthy attend que le healthcheck passe, donc que PostgreSQL soit vraiment prêt
+    depends_on:
+      db:
+        condition: service_healthy
+
+    # Charge toutes mes variables du .env dans le container (API_KEY, DB_NAME, DB_USER etc.)
+    env_file:
+      - .env
+
+    # Override DB_HOST du .env qui vaut localhost
+    # Dans Docker, localhost dans un container = le container lui-même, pas PostgreSQL
+    # db c'est le nom du service PostgreSQL dans le réseau Docker
+    environment:
+      DB_HOST: db
+
+    # Override le CMD du Dockerfile pour passer la ville en argument
+    command: ["python", "-m", "app.main", "Paris"]

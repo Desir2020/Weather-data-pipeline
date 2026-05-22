@@ -3,9 +3,10 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-api_key = os.getenv("API_KEY")
 
 def weather_ville(ville):
+    api_key = os.getenv("API_KEY")
+    
     try:
         if not api_key:
             raise ValueError("Clé API introuvable")
